@@ -104,6 +104,22 @@ class VisJones(object):
                 self.nPol,
                 self.nPar)
 
+    # Generically set parameter axes shapes
+    #  (does not inflate pars!)
+    def setParShape(self, nTime=1, nAnt=1, nChanPar=1):
+        # normally, these will be set by ingesting a calset or data
+        self.nTimePar = nTime
+        self.nAntPar = nAnt
+        self.nChanPar = 1
+        if self.chanDepPar:
+            self.nChanPar = nChanPar
+
+        self.nChanMat = self.nChanPar  # for now  (will need to revise for param'd)
+
+        # discard any existing pars, Jones (probably wrong shape!)
+        self.pars = np.array([])
+        self.Jones = np.array([])
+
     @property
     def polName(self):
         if self.polBasis==PolBasisEnum.LINEAR:
@@ -197,22 +213,6 @@ class VisJones(object):
         pl.ylabel('Imag')
         pl.title('Complex Calibraiton')
 
-
-    # Generically set parameter axes shapes
-    #  (does not inflate pars!)
-    def setParShape(self,nTime=1,nAnt=1,nChanPar=1):
-        # normally, these will be set by ingesting a calset or data
-        self.nTimePar=nTime
-        self.nAntPar=nAnt
-        self.nChanPar=1
-        if self.chanDepPar:
-            self.nChanPar=nChanPar
-
-        self.nChanMat=self.nChanPar   # for now  (will need to revise for param'd)
-
-        # discard any existing pars, Jones (probably wrong shape!)
-        self.pars=np.array([])
-        self.Jones=np.array([])
 
     # Set parameter axes shapes from visData
     def setParShapeFromVisData(self,visData,doTimeDep=False):
