@@ -1,5 +1,6 @@
 import numpy as np
 
+from toolviper.utils import logger
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import TypeVar, Type, Union
@@ -24,7 +25,7 @@ class JonesMatrix(ABC):
         # public parent variable
         self.type: Union[str, None] = None
         self.dtype: Union[type, None] = None
-        self.n_time: Union[int, None] = None
+        self.n_times: Union[int, None] = None
         self.n_antennas: Union[int, None] = None
         self.n_channels: Union[int, None] = None
         self.n_polarizations: Union[int, None] = None
@@ -40,7 +41,7 @@ class JonesMatrix(ABC):
     @property
     @abstractmethod
     def shape(self) -> tuple:
-        return self.n_time, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters
+        return self.n_times, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters
 
     @shape.setter
     @abstractmethod
@@ -49,7 +50,7 @@ class JonesMatrix(ABC):
         self._parameters = np.empty([])
         self._matrix = np.empty([])
 
-        self.n_time, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters = shape
+        self.n_times, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters = shape
 
     @property
     @abstractmethod
@@ -73,7 +74,6 @@ class JonesMatrix(ABC):
 
     # Inherited method properties
     @classmethod
-    @abstractmethod
     def from_parameters(cls: Type[T], parameters: dict) -> T:
         import inspect
 
@@ -103,8 +103,7 @@ class JonesMatrix(ABC):
 
         return obj
 
-    @abstractmethod
-    def initialize(self, dtype: np.dtype, shape: tuple = None):
+    def initialize_parameters(self, dtype: np.dtype, shape: tuple = None):
         # Set data type
         self.type = dtype
 
@@ -117,3 +116,21 @@ class JonesMatrix(ABC):
 
         # Reset Jones
         self.matrix = np.empty([])
+
+    def initialize_jones(self, shape: tuple = None):
+        if shape is not None:
+            self.shape = shape
+
+        self.matrix = np.identity(2, dtype=np.complex64)
+        self.matrix = np.tile(self.matrix, [self.n_times, self.n_antennas, self.n_channel_matrices, 1, 1])
+
+    def invert(self) -> Union[np.array, None]:
+        if np.any(np.abs(np.linalg.det(self.matrix)) == 0.):
+            logger.error(f"Jones matrix is singular: {np.linalg.det(self.matrix)}")
+            return None
+
+        return np.linalg.inv(self.matrix)
+
+    def accumulate(self, other: Type[T]) -> T:
+        # I think this could just be an overload of __mul__()
+        return np.matmul(other.matrix, self.matrix, out=self.matrix)
