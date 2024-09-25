@@ -65,7 +65,7 @@ class JonesMatrix(ABC):
     @property
     @abstractmethod
     def matrix(self) -> np.ndarray:
-        raise NotImplementedError
+        return self._matrix
 
     @matrix.setter
     @abstractmethod
