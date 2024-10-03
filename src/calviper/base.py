@@ -1,3 +1,5 @@
+import xarray as xr
+
 import numpy as np
 
 from toolviper.utils import logger
@@ -39,27 +41,26 @@ class JonesMatrix(ABC):
 
     # Inherited member properties
     @property
-    @abstractmethod
     def shape(self) -> tuple:
         return self.n_times, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters
 
     @shape.setter
-    @abstractmethod
     def shape(self, shape: tuple):
-        # Reset parameters and matrices
-        self._parameters = np.empty([])
-        self._matrix = np.empty([])
-
+        # Unpack shape values
         self.n_times, self.n_antennas, self.n_channels, self.n_polarizations, self.n_parameters = shape
+
+        # Reset parameters and matrices
+        self._parameters = np.empty(shape, dtype=self.dtype)
+        self._matrix = np.empty((self.n_times, self.n_antennas, self.n_channels), dtype=complex)
 
     @property
     @abstractmethod
-    def parameters(self) -> None:
+    def parameters(self) -> np.ndarray:
         return self._parameters
 
     @parameters.setter
     @abstractmethod
-    def parameters(self, array: np.array) -> np.ndarray:
+    def parameters(self, array: np.array) -> None:
         raise NotImplementedError
 
     @property
@@ -70,6 +71,10 @@ class JonesMatrix(ABC):
     @matrix.setter
     @abstractmethod
     def matrix(self, array: np.array) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def calculate(self) -> None:
         raise NotImplementedError
 
     # Inherited method properties
@@ -103,6 +108,10 @@ class JonesMatrix(ABC):
 
         return obj
 
+    @classmethod
+    def from_visibility(cls: Type[T], data: xr.Dataset, time_dependence: bool = False) -> T:
+        return cls
+
     def initialize_parameters(self, dtype: np.dtype, shape: tuple = None):
         # Set data type
         self.type = dtype
@@ -111,8 +120,10 @@ class JonesMatrix(ABC):
         if shape is not None:
             self.shape = shape
 
+        assert self.shape is not None, logger.error("Matrix shape is not set.")
+
         # Initialize the parameters to default
-        self.parameters = np.ones(shape, dtype=dtype)
+        self.parameters = np.ones(self.shape, dtype=dtype)
 
         # Reset Jones
         self.matrix = np.empty([])
@@ -134,3 +145,11 @@ class JonesMatrix(ABC):
     def accumulate(self, other: Type[T]) -> T:
         # I think this could just be an overload of __mul__()
         return np.matmul(other.matrix, self.matrix, out=self.matrix)
+
+    def apply_left(self):
+        # Need to inspect use case
+        pass
+
+    def apply_right(self):
+        # Need to inspect use case
+        pass
