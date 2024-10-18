@@ -50,15 +50,33 @@ class GainTable(BaseCalibrationTable):
 
     @staticmethod
     def empty_like(dataset: xr.Dataset)->xr.Dataset:
-        dims = list(dataset.sizes)
-        parameter = np.empty(tuple(dataset.sizes.values()))
+        antenna = dataset.antenna_xds.antenna_name.values
+        polarizations = np.unique([p for value in dataset.polarization.values for p in list(value)])
+
+        dims = dict(
+            time=dataset.sizes["time"],
+            antenna=antenna.shape[0],
+            frequency=dataset.sizes["frequency"],
+            polarization=polarizations.shape[0],
+            gain=1
+        )
+
+        coords = dict(
+            time=(["time"], dataset.time.values),
+            antenna=(["antenna"], antenna),
+            frequency=(["frequency"], dataset.frequency.values),
+            polarization=(["polarization"], polarizations),
+            scan_id=(["scan_id"], dataset.scan_number.values),
+            gain=(["gain"], np.empty(1))
+        )
+
+        gain = np.empty(list(dims.values()))
 
         xds = xr.Dataset()
 
-        xds["PARAMETER"] = xr.DataArray(parameter, dims=dims)
+        xds["GAIN"] = xr.DataArray(gain, dims=dims)
         xds.attrs["calibration_type"] = "gain"
-
-        xds = xds.assign_coords(dataset.coords)
+        xds = xds.assign_coords(coords)
 
         return xds
 
