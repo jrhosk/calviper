@@ -5,6 +5,7 @@ from typing import TypeVar, Type, Union
 
 T = TypeVar('T', bound='Parent')
 
+
 class GainJones(JonesMatrix):
     def __init__(self):
         super(GainJones, self).__init__()
@@ -15,6 +16,10 @@ class GainJones(JonesMatrix):
         self.n_polarizations: Union[int, None] = 2
         self.n_parameters: Union[int, None] = 1
         self.channel_dependent_parameters: bool = False
+
+        # private variables
+        self._matrix = None
+        self._parameters = None
 
         self.name: str = "GainJonesMatrix"
 
