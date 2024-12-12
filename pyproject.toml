@@ -3,7 +3,8 @@ name = "calviper"
 version = "0.0.1"
 description = "Calibration Prototype using VIPER/RADPS frameworks"
 authors = [
-    {name = "Joshua Hoskins", email="jhoskins@nrao.edu"},
+    {name = "Joshua Hoskins", email = "jhoskins@nrao.edu"},
+    {name = "Neal Schweighart", email = "nschweig@nrao.edu"}
 ]
 license = {file = "LICENSE.txt"}
 readme = "README.md"
